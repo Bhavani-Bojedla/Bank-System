@@ -1,38 +1,64 @@
 const mongoose = require('mongoose');
 const Account = require('../models/Account');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
+const secretKey = process.env.SECRET_KEY;
 
 const createAccount = async (req, res) => {
-    const { name, email } = req.body;
-  
+  const { name, email, password } = req.body;
+
+  try {
     // Check if email already exists
     const existingAccount = await Account.findOne({ email });
     if (existingAccount) {
-      return res.status(400).json({ message: 'Email already associated with another account' });
+      return res.status(400).json({ message: "Email already associated with another account" });
     }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
   
-    // Create new account
     const newAccount = new Account({
       name,
       email,
-      balance: 0,  // Initial balance is 0
-      transactionHistory: []  // Empty transaction history initially
+      password: hashedPassword, 
+      balance: 0,
+      transactionHistory: [],
     });
-  
+
+    const savedAccount = await newAccount.save();
+    res.status(201).json(savedAccount);
+  } catch (error) {
+    console.error("Error creating account:", error.message);
+    res.status(500).json({ message: "Failed to create account" });
+  }
+};
+
+
+  const login = async (req, res) => {
+    const { email, password } = req.body;
+    const secretKey = process.env.SECRET_KEY;
     try {
-      const savedAccount = await newAccount.save();
-      res.status(201).json(savedAccount);
+      const user = await Account.findOne({ email });
+      const id=user.id;
+      if (!user) return res.status(404).json({ message: "User not found" });
+  
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+      const token = jwt.sign({ id: user._id }, secretKey);
+  
+      res.json({ token, id });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Failed to create account' });
+      res.status(500).json({ message: "Server error" });
     }
-  };  
-
+  };
+  
 
 const deposit = async (req, res) => {
   const { accountId, amount } = req.body;
 
-  // Check if accountId is a valid ObjectId
   if (!mongoose.Types.ObjectId.isValid(accountId)) {
     return res.status(400).json({ message: 'Invalid account ID format' });
   }
@@ -51,7 +77,6 @@ const deposit = async (req, res) => {
 const withdraw = async (req, res) => {
   const { accountId, amount } = req.body;
 
-  // Check if accountId is a valid ObjectId
   if (!mongoose.Types.ObjectId.isValid(accountId)) {
     return res.status(400).json({ message: 'Invalid account ID format' });
   }
@@ -72,7 +97,6 @@ const withdraw = async (req, res) => {
 const sendMoney = async (req, res) => {
   const { fromAccountId, toAccountId, amount } = req.body;
 
-  // Check if both accountIds are valid ObjectIds
   if (!mongoose.Types.ObjectId.isValid(fromAccountId) || !mongoose.Types.ObjectId.isValid(toAccountId)) {
     return res.status(400).json({ message: 'Invalid account ID format' });
   }
@@ -102,26 +126,21 @@ const sendMoney = async (req, res) => {
 const getHistory = async (req, res) => {
   const { accountId } = req.query;
 
-  // Validate the accountId
   if (!mongoose.Types.ObjectId.isValid(accountId)) {
     return res.status(400).json({ message: 'Invalid account ID format' });
   }
 
   try {
-    // Find the account by ID
     const account = await Account.findById(accountId);
 
     if (!account) {
       return res.status(404).json({ message: 'Account not found' });
     }
-
-    // Return the transaction history
-    res.json(account.transactionHistory);
+    res.json({hisotry:account.transactionHistory,balance:account.balance});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error fetching account history' });
   }
 }; 
 
- 
-module.exports = {createAccount, deposit, withdraw, sendMoney, getHistory };
+module.exports = {login,createAccount, deposit, withdraw, sendMoney, getHistory };

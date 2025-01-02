@@ -1,13 +1,13 @@
-// models/Account.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
-const accountSchema = new mongoose.Schema({
+const AccountSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   balance: { type: Number, default: 0 },
-  transactionHistory: { type: [String], default: [] }
-}, { timestamps: true });
+  transactionHistory: { type: Array, default: [] },
+});
 
-const Account = mongoose.model('Account', accountSchema);
-
-module.exports = Account;
+ 
+module.exports = mongoose.model("Account", AccountSchema);

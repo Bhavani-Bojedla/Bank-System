@@ -1,16 +1,15 @@
-// routes/bankRoutes.js
-const express = require('express');
+const express = require("express");
+// const { login } = require("../controllers/authController");
+const {login, deposit, withdraw, sendMoney,getHistory, createAccount } = require("../controllers/bankController");
+const authenticateToken = require("../middleware/authenticateToken");
+
 const router = express.Router();
-const { createAccount, deposit, withdraw, sendMoney, getHistory } = require('../controllers/bankController');
 
-// POST route to create an account
 router.post('/create', createAccount);
-
-// Other routes for deposit, withdraw, sendMoney, etc.
-router.post('/deposit', deposit);
-router.post('/withdraw', withdraw);
-router.post('/send', sendMoney);
-router.get('/history', getHistory);
+router.post("/login", login);
+router.post('/deposit',authenticateToken, deposit);
+router.post('/withdraw',authenticateToken, withdraw);
+router.post('/send',authenticateToken, sendMoney);
+router.get('/history',authenticateToken, getHistory);
 
 module.exports = router;
- 
