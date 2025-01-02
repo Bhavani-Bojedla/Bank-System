@@ -103,14 +103,16 @@ const sendMoney = async (req, res) => {
   if (fromAccount.balance < amount)
     return res.status(400).json({ message: "Insufficient funds" });
 
-  fromAccount.balance -= amount;
-  toAccount.balance += amount;
+  const Amount = parseFloat(amount);
+
+  fromAccount.balance -= Amount;
+  toAccount.balance += Amount;
 
   fromAccount.transactionHistory.push(
-    `Sent ${amount} to account ${toAccountId}`
+    `Sent ${Amount} to account ${toAccountId}`
   );
   toAccount.transactionHistory.push(
-    `Received ${amount} from account ${fromAccountId}`
+    `Received ${Amount} from account ${fromAccountId}`
   );
 
   await fromAccount.save();
