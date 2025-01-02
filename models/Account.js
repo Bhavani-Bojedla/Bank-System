@@ -9,5 +9,4 @@ const AccountSchema = new mongoose.Schema({
   transactionHistory: { type: Array, default: [] },
 });
 
- 
 module.exports = mongoose.model("Account", AccountSchema);

@@ -1,5 +1,4 @@
 const express = require("express");
-// const { login } = require("../controllers/authController");
 const {login, deposit, withdraw, sendMoney,getHistory, createAccount } = require("../controllers/bankController");
 const authenticateToken = require("../middleware/authenticateToken");
 
